@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Documents sources : jamais versionnés (scripts/fetch_corpus.py les reconstitue).
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/cg_multirisque_habitation_demo.md
+data/processed/*
+!data/processed/.gitkeep
+
+# L'index de démonstration (data/chroma/) EST versionné : la démo en ligne ne
+# recalcule aucun embedding au démarrage. Les index d'évaluation, non.
+data/chroma_eval/
+
+# Journaux et résultats détaillés d'évaluation (les .md de synthèse sont versionnés).
+data/_*.log
+eval/results/_*.log
+eval/results/*.json
+
+# Suivi de chantier interne, retiré du dépôt public.
+ROADMAP.md

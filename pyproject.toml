@@ -1,0 +1,16 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [".venv", "data", "notebooks"]
+
+[tool.ruff.lint]
+# E402 est activé volontairement : app/main.py ajuste sys.path avant ses imports
+# et le signale par des `noqa` explicites, qui n'ont de sens que si la règle existe.
+select = ["E", "F", "I", "UP", "B", "RUF"]
+# Les documents d'assurance emploient réellement le tiret cadratin, les guillemets
+# français et l'apostrophe typographique : les motifs de découpage doivent les matcher.
+allowed-confusables = ["–", "—", "’", "«", "»"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

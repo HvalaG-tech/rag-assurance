@@ -1,0 +1,9 @@
+# Évaluation — 2026-09-06_2200
+
+40 questions · 489 s · configuration de référence : `semantic · hybrid · rerank`
+
+| Configuration | recall@1 | recall@3 | recall@5 | mrr | justesse | abstention_correcte | fausses_abstentions | fidelite | cout_par_question |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| semantic · hybrid · rerank | 62% | 72% | 82% | 0.71 | 82% | 100% | 4 | 100% | 0.0319 $ |
+
+recall@k et MRR : questions à réponse dans le corpus (part des preuves attendues retrouvées dans les k premiers passages). justesse : réponses générées contenant les éléments attendus. abstention_correcte : questions hors corpus sur lesquelles le système a déclaré l'information absente. fausses_abstentions : questions à réponse sur lesquelles il s'est abstenu à tort.

@@ -1,0 +1,6 @@
+# Dépendances lourdes, pour le poste de développement uniquement :
+# reranker cross-encoder (PyTorch) et embeddings HuggingFace natifs.
+-r requirements.txt
+sentence-transformers==5.7.0
+langchain-huggingface==1.2.2
+ipykernel>=6.29
