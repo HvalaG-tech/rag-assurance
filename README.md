@@ -4,10 +4,9 @@
 conditions générales. Ce système répond en dix secondes — avec le passage exact qui fonde
 la réponse, et un aveu clair quand le corpus ne la contient pas.**
 
-## ▶ [Essayer la démo en ligne](https://rag-assurance.streamlit.app)
-
-*Six questions guidées, sans clé ni inscription. Les questions libres utilisent votre
-propre clé API.*
+> **Démo en ligne** — déploiement en cours de finalisation. Les captures ci-dessous sont
+> prises sur l'application réelle ; le dépôt s'exécute en local en trois commandes
+> (voir *Installation*), index compris.
 
 ![Réponse sourcée : citation page par page, score de pertinence, passage surligné](docs/demo-reponse-sourcee.png)
 
@@ -102,7 +101,7 @@ Le fonctionnement complet, module par module, et les raisons de chaque choix :
 | Reranker | `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1` | convertit le rappel en précision (+17 pts recall@5) |
 | Vector store | ChromaDB, index versionné | aucun embedding de document au démarrage |
 | Interface | Streamlit | conversation, sources surlignées, parcours guidé |
-| Qualité | pytest (66 tests), ruff | dont un test qui exécute l'application |
+| Qualité | pytest (84 tests), ruff | dont un test qui exécute l'application |
 
 ## Installation
 

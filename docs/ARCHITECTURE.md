@@ -63,7 +63,7 @@ scripts/
   build_index.py   construit l'index versionné data/chroma/
   build_demo_answers.py  pré-calcule les 6 réponses du parcours (data/demo_answers.json)
   capture_ecrans.py      photographie la démo pour le README (playwright)
-tests/             66 tests, dont un qui exécute l'application Streamlit en headless
+tests/             84 tests, dont un qui exécute l'application Streamlit en headless
 docs/              CORPUS.md, EVALUATION.md, ce fichier
 data/
   raw/             les PDF (non versionnés) — <branche>/<assureur>/<fichier>.pdf
@@ -402,7 +402,7 @@ streamlit run app/main.py
 
 En ligne de commande : `python -m app.rag_chain "Quel est le délai de prescription ?"`.
 
-Tests et qualité : `pytest` (66 tests, ~30 s ; ceux qui exigent l'index ou le réseau
+Tests et qualité : `pytest` (84 tests, ~30 s ; ceux qui exigent l'index ou le réseau
 s'ignorent d'eux-mêmes) et `ruff check` / `ruff format` (configuration dans `pyproject.toml`).
 
 ### Déployer la démo (Streamlit Community Cloud)
