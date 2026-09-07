@@ -4,12 +4,22 @@
 conditions générales. Ce système répond en dix secondes — avec le passage exact qui fonde
 la réponse, et un aveu clair quand le corpus ne la contient pas.**
 
-![Démonstration](docs/demo.gif)
-
 ## ▶ [Essayer la démo en ligne](https://rag-assurance.streamlit.app)
 
 *Six questions guidées, sans clé ni inscription. Les questions libres utilisent votre
 propre clé API.*
+
+![Réponse sourcée : citation page par page, score de pertinence, passage surligné](docs/demo-reponse-sourcee.png)
+
+*Une réponse : chaque affirmation porte sa source et sa page, le passage qui la fonde est
+surligné dans l'extrait, et la barre indique la pertinence mesurée (96 %) avec le rang
+obtenu par chaque moteur de recherche.*
+
+![Abstention : information absente du corpus](docs/demo-abstention.png)
+
+*La même interface sur une question hors corpus. Le système ne produit pas de réponse
+plausible : il dit ce qui manque, et montre les passages qu'il a consultés sans les juger
+suffisants. **C'est ce comportement que le projet démontre**, mesuré 7 fois sur 7.*
 
 ---
 

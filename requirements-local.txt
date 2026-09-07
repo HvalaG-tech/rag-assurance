@@ -4,3 +4,5 @@
 sentence-transformers==5.7.0
 langchain-huggingface==1.2.2
 ipykernel>=6.29
+# Captures d écran du README (scripts/capture_ecrans.py).
+playwright>=1.48

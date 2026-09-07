@@ -62,6 +62,7 @@ scripts/
   fetch_corpus.py  retélécharge les PDF depuis les sites publics des assureurs
   build_index.py   construit l'index versionné data/chroma/
   build_demo_answers.py  pré-calcule les 6 réponses du parcours (data/demo_answers.json)
+  capture_ecrans.py      photographie la démo pour le README (playwright)
 tests/             66 tests, dont un qui exécute l'application Streamlit en headless
 docs/              CORPUS.md, EVALUATION.md, ce fichier
 data/

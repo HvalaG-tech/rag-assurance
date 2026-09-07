@@ -42,3 +42,44 @@ def test_le_titre_et_la_promesse_sont_visibles(app: AppTest):
 def test_la_cle_visiteur_est_un_champ_masque(app: AppTest):
     champs = [t for t in app.sidebar.text_input]
     assert champs, "le champ de clé API doit exister dans le panneau latéral"
+
+
+def test_mode_demo_repond_sans_cle_api(monkeypatch):
+    """Comportement critique de la démo publique : un visiteur sans clé clique sur
+    une question du parcours et obtient une vraie réponse sourcée, sans appel API."""
+    from app.config import settings
+    from app.rag_chain import answer as _answer
+
+    monkeypatch.setattr(settings, "demo_mode", True)
+    monkeypatch.setattr(settings, "anthropic_api_key", None)
+    # Tout appel au LLM pendant ce test est un échec : la réponse doit être pré-calculée.
+    monkeypatch.setattr(
+        "app.main.answer",
+        lambda *a, **k: pytest.fail("le mode démo ne doit appeler aucune API"),
+        raising=False,
+    )
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.button(key="parcours_0").click().run()
+
+    assert not test.exception, test.exception
+    # La réponse pré-calculée cite bien un passage du contrat.
+    rendu = " ".join(m.value for m in test.markdown)
+    assert "2 jours ouvrés" in rendu
+    assert "dg_allsecur_auto.pdf" in rendu
+    assert _answer  # l'import réel existe : le monkeypatch a bien remplacé un symbole présent
+
+
+def test_mode_demo_refuse_une_question_libre_sans_cle(monkeypatch):
+    """Garde-fou budgétaire : hors parcours, il faut la clé du visiteur."""
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "demo_mode", True)
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.chat_input[0].set_value("Quelle est la franchise en cas de grêle ?").run()
+
+    assert not test.exception, test.exception
+    assert any("votre propre clé" in w.value for w in test.warning), [w.value for w in test.warning]
