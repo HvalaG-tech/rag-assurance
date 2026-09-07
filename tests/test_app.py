@@ -83,3 +83,40 @@ def test_mode_demo_refuse_une_question_libre_sans_cle(monkeypatch):
 
     assert not test.exception, test.exception
     assert any("votre propre clé" in w.value for w in test.warning), [w.value for w in test.warning]
+
+
+def _sans_aucune_cle(monkeypatch):
+    """Reproduit l'environnement de Streamlit Cloud sans secret : aucune clé nulle part."""
+    for nom in ("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY_BACKUP", "OPENAI_API_KEY", "DEMO_MODE"):
+        monkeypatch.delenv(nom, raising=False)
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "demo_mode", False)
+    monkeypatch.setattr(settings, "anthropic_api_key", None)
+
+
+def test_sans_cle_ni_reglage_demo_le_parcours_fonctionne_quand_meme(monkeypatch):
+    """Régression du crash de mise en ligne : le secret DEMO_MODE avait été omis, et
+    l'application appelait le modèle sans clé — trace d'authentification à l'écran.
+
+    Sans clé serveur, aucun appel n'est possible : le mode démo doit s'imposer seul."""
+    _sans_aucune_cle(monkeypatch)
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.button(key="parcours_0").click().run()
+
+    assert not test.exception, test.exception
+    assert "2 jours ouvrés" in " ".join(m.value for m in test.markdown)
+
+
+def test_sans_cle_une_question_libre_est_refusee_proprement(monkeypatch):
+    """Et une question hors parcours affiche un message clair, jamais une trace Python."""
+    _sans_aucune_cle(monkeypatch)
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.chat_input[0].set_value("Quelle est la franchise en cas de grêle ?").run()
+
+    assert not test.exception, test.exception
+    assert any("votre propre clé" in w.value for w in test.warning), [w.value for w in test.warning]

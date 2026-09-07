@@ -9,6 +9,7 @@ permet pas de répondre.
 from __future__ import annotations
 
 import html
+import os
 import re
 import sys
 from dataclasses import replace
@@ -81,6 +82,37 @@ def _nombre_de_chunks() -> int:
         return 0
 
 
+def _secret(nom: str) -> str | None:
+    """Lit un réglage dans l'environnement, puis dans les secrets Streamlit.
+
+    Sur Streamlit Community Cloud, les secrets sont normalement exposés comme
+    variables d'environnement, mais `st.secrets` reste la source fiable — et sa
+    simple lecture lève si aucun fichier de secrets n'existe (cas du poste local).
+    """
+    if valeur := os.getenv(nom):
+        return valeur
+    try:
+        return st.secrets.get(nom)
+    except Exception:
+        return None
+
+
+def _cle_serveur_disponible() -> bool:
+    """Une clé API est-elle configurée côté serveur ?"""
+    return bool(_secret("ANTHROPIC_API_KEY") or _secret("ANTHROPIC_API_KEY_BACKUP"))
+
+
+# Sans clé côté serveur, aucun appel au modèle n'est possible : l'application est
+# de facto en démonstration. Le déduire plutôt que de dépendre du seul réglage
+# DEMO_MODE évite qu'un secret oublié au déploiement ne fasse planter la page sur
+# une erreur d'authentification.
+MODE_DEMO = (
+    settings.demo_mode
+    or (_secret("DEMO_MODE") or "").lower() in {"1", "true", "yes"}
+    or not _cle_serveur_disponible()
+)
+
+
 # --- Panneau latéral ------------------------------------------------------------
 
 with st.sidebar:
@@ -113,7 +145,7 @@ with st.sidebar:
         label_visibility="collapsed",
         placeholder="sk-ant-… (questions libres uniquement)",
     )
-    if settings.demo_mode:
+    if MODE_DEMO:
         st.caption(
             "Mode démo : les six questions du parcours sont servies sans clé. "
             "Les questions libres utilisent la vôtre."
@@ -283,13 +315,19 @@ for tour in st.session_state.historique:
 def _repondre(question: str) -> tuple[RagAnswer, Settings] | None:
     cfg = _configuration_courante()
 
-    if settings.demo_mode and question in _reponses_demo():
+    if MODE_DEMO and question in _reponses_demo():
         return _reponses_demo()[question], replace(cfg, use_reranker=True)
 
-    if settings.demo_mode and not cfg.anthropic_api_key:
+    # Sans clé du visiteur, on refuse dans deux cas : en mode démo, où les questions
+    # libres ne doivent jamais être facturées au propriétaire de la démo ; et quand
+    # aucune clé n'existe nulle part — sans quoi le SDK lève une erreur
+    # d'authentification que Streamlit affiche en trace Python.
+    if not cfg.anthropic_api_key and (MODE_DEMO or not _cle_serveur_disponible()):
         st.warning(
-            "Les questions libres utilisent votre propre clé API — saisissez-la dans le "
-            "panneau latéral. Les six questions du parcours fonctionnent sans clé."
+            "Cette question sort du parcours de démonstration : elle demande un appel "
+            "au modèle, donc **votre propre clé API** — à saisir dans le panneau latéral "
+            "(elle reste dans votre session, n'est ni journalisée ni enregistrée).\n\n"
+            "Les six questions du parcours ci-dessus fonctionnent sans clé."
         )
         return None
 
