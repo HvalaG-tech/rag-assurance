@@ -31,6 +31,17 @@ fidélité 100 %, 0,032 $/question (`eval/results/latest.md`).
   et le README en cohérence. **Publier les chiffres réels, même moyens.**
 - Un index construit avec un fournisseur d'embeddings s'interroge avec le même
   (`fastembed` pour l'index versionné).
+- **Chroma réécrit ses fichiers à la simple ouverture** : `data/chroma/*.bin` et
+  `chroma.sqlite3` apparaissent modifiés après chaque `streamlit run` ou `pytest`,
+  sans que le contenu logique change. Vérifier le nombre de chunks (761), puis
+  `git checkout -- data/chroma` — ne pas commiter ce bruit. Ne jamais faire de
+  `git stash` sur ces fichiers tant qu'un serveur Streamlit tourne : Windows
+  verrouille les `.bin` et le stash échoue à mi-chemin.
+- Arrêter les serveurs de test avant toute opération git :
+  `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object
+  { $_.CommandLine -like '*streamlit run*' } | ForEach-Object { Stop-Process -Id
+  $_.ProcessId -Force }` (`pkill -f "streamlit run"` ne les attrape pas, leur ligne
+  de commande étant `python.exe -m streamlit`).
 - `requirements.txt` = démo (sans PyTorch) ; `requirements-local.txt` = + reranker.
 - Documents : uniquement des CG publiquement diffusées, jamais un document interne
   d'un ancien employeur. Provenance à consigner dans `docs/CORPUS.md`.
