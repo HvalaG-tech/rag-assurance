@@ -4,9 +4,10 @@
 conditions générales. Ce système répond en dix secondes — avec le passage exact qui fonde
 la réponse, et un aveu clair quand le corpus ne la contient pas.**
 
-> **Démo en ligne** — déploiement en cours de finalisation. Les captures ci-dessous sont
-> prises sur l'application réelle ; le dépôt s'exécute en local en trois commandes
-> (voir *Installation*), index compris.
+## ▶ [Essayer la démo en ligne](https://rag-assurance-hvalag-tech.streamlit.app/)
+
+*Six questions guidées, sans clé ni inscription. Les questions libres utilisent votre
+propre clé API.*
 
 ![Réponse sourcée : citation page par page, score de pertinence, passage surligné](docs/demo-reponse-sourcee.png)
 
