@@ -120,3 +120,52 @@ def test_sans_cle_une_question_libre_est_refusee_proprement(monkeypatch):
 
     assert not test.exception, test.exception
     assert any("votre propre clé" in w.value for w in test.warning), [w.value for w in test.warning]
+
+
+def test_une_cle_invalide_affiche_un_message_et_non_une_trace(monkeypatch):
+    """Un visiteur qui saisit une clé erronée doit lire une phrase, pas un traceback."""
+    import app.rag_chain as chaine
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "demo_mode", False)
+
+    def _llm_refuse(cfg=None):
+        raise RuntimeError(
+            "Error code: 401 - {'error': {'type': 'authentication_error', "
+            "'message': 'invalid x-api-key'}} sk-ant-api03-FRAGMENTSECRET"
+        )
+
+    # `answer` résout `get_llm` dans le module rag_chain, que AppTest ne recharge pas.
+    monkeypatch.setattr(chaine, "get_llm", _llm_refuse)
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.sidebar.text_input[0].set_value("sk-ant-cle-manifestement-fausse").run()
+    test.chat_input[0].set_value("Quelle est la franchise en cas de grêle ?").run()
+
+    assert not test.exception, test.exception
+    erreurs = " ".join(e.value for e in test.error)
+    assert "refusée" in erreurs or "invalide" in erreurs, erreurs
+    # Le fragment secret de la clé ne doit jamais réapparaître à l'écran.
+    assert "FRAGMENTSECRET" not in erreurs
+
+
+def test_un_echec_ne_consomme_pas_le_quota_de_la_session(monkeypatch):
+    """Une clé refusée ne doit pas décompter une question au visiteur."""
+    import app.rag_chain as chaine
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "demo_mode", False)
+    monkeypatch.setattr(
+        chaine,
+        "get_llm",
+        lambda cfg=None: (_ for _ in ()).throw(RuntimeError("401 invalid x-api-key")),
+    )
+
+    test = AppTest.from_file(str(MAIN), default_timeout=120)
+    test.run()
+    test.sidebar.text_input[0].set_value("sk-ant-fausse").run()
+    test.chat_input[0].set_value("Une question qui va échouer ?").run()
+
+    assert not test.exception, test.exception
+    assert test.session_state["questions_posees"] == 0

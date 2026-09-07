@@ -137,6 +137,73 @@ def combiner_confiance(recherche: str, modele: str) -> str:
     return NIVEAUX[rang]
 
 
+# Toute chaîne ressemblant à une clé, pour ne jamais la réafficher : les messages
+# d'erreur des fournisseurs en citent parfois un fragment.
+_MOTIF_CLE = re.compile(r"\b(sk|pk)-[A-Za-z0-9_\-]{6,}", re.IGNORECASE)
+
+# Signature textuelle -> message destiné au visiteur. L'ordre compte : « crédit
+# insuffisant » arrive dans une erreur 400 qu'il ne faut pas confondre avec une
+# clé invalide.
+_DIAGNOSTICS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (
+        ("credit balance", "billing", "insufficient_quota", "quota"),
+        "Le crédit associé à cette clé API est épuisé. Rechargez le compte chez votre "
+        "fournisseur, ou essayez une autre clé.",
+    ),
+    (
+        ("authentication_error", "invalid x-api-key", "401", "invalid_api_key", "unauthorized"),
+        "Cette clé API a été refusée : elle est invalide, révoquée, ou incomplète. "
+        "Vérifiez-la dans le panneau latéral — elle doit commencer par « sk-ant- » et "
+        "être copiée en entier.",
+    ),
+    (
+        ("permission", "403", "forbidden"),
+        "Cette clé API n'a pas les droits nécessaires pour interroger le modèle. "
+        "Vérifiez ses permissions chez votre fournisseur.",
+    ),
+    (
+        ("rate_limit", "429", "too many requests"),
+        "Trop de requêtes envoyées avec cette clé en peu de temps. Patientez une minute "
+        "avant de réessayer.",
+    ),
+    (
+        ("connection", "timeout", "timed out", "network", "dns"),
+        "Impossible de joindre le service du modèle : le réseau ne répond pas. "
+        "Réessayez dans un instant.",
+    ),
+    (
+        ("overloaded", "529", "503", "502", "500", "internal server"),
+        "Le service du modèle est momentanément indisponible ou surchargé. "
+        "Réessayez dans un instant.",
+    ),
+)
+
+MESSAGE_ERREUR_GENERIQUE = (
+    "La réponse n'a pas pu être générée. Réessayez ; si le problème persiste, "
+    "vérifiez la clé API saisie dans le panneau latéral."
+)
+
+
+def message_erreur_api(erreur: BaseException) -> str:
+    """Traduit une erreur d'appel au modèle en message compréhensible.
+
+    On s'appuie sur le texte plutôt que sur les classes d'exception du SDK : LangChain
+    enveloppe et ré-emballe les erreurs, et l'application doit rester lisible quel que
+    soit le fournisseur. Le message brut n'est jamais réaffiché — il peut contenir un
+    fragment de la clé.
+    """
+    texte = f"{type(erreur).__name__} {erreur}".lower()
+    for signatures, message in _DIAGNOSTICS:
+        if any(signature in texte for signature in signatures):
+            return message
+    return MESSAGE_ERREUR_GENERIQUE
+
+
+def masquer_les_cles(texte: str) -> str:
+    """Remplace toute chaîne ressemblant à une clé API par un marqueur."""
+    return _MOTIF_CLE.sub("[clé masquée]", texte)
+
+
 def texte_de_la_reponse(contenu: str | list) -> str:
     """Ne garde que le texte d'une réponse de modèle.
 

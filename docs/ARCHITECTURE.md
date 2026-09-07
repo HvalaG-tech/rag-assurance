@@ -367,8 +367,23 @@ sans rien faire, sans risque pour l'auteur.
 Le panneau latéral, replié par défaut, expose le mode de recherche, `top_k`, le reranker,
 la clé, et le tableau d'évaluation.
 
+**Quand ça se passe mal.** L'interface ne doit jamais montrer de trace Python à un
+visiteur. Deux garde-fous :
+
+- *Avant l'appel* — sans clé du visiteur, la question libre est refusée en mode démo (elle
+  ne doit jamais être facturée au propriétaire) et lorsqu'aucune clé n'existe nulle part.
+  Le mode démo se déduit d'ailleurs de l'absence de clé serveur, si bien qu'un réglage
+  `DEMO_MODE` oublié au déploiement ne peut pas casser la page.
+- *Après l'appel* — `message_erreur_api()` traduit l'échec en une phrase actionnable : clé
+  refusée, crédit épuisé, droits insuffisants, trop de requêtes, réseau, service surchargé.
+  La classification s'appuie sur le texte de l'erreur plutôt que sur les classes du SDK,
+  que LangChain enveloppe. Le message brut n'est jamais réaffiché : il cite parfois un
+  fragment de la clé (`masquer_les_cles()` sert partout où un texte brut pourrait être
+  journalisé). Un échec ne décompte pas de question au visiteur.
+
 `tests/test_app.py` exécute réellement le script (`streamlit.testing.v1.AppTest`) et
-vérifie qu'il démarre sans exception, sans appel LLM.
+vérifie qu'il démarre sans exception, sans appel LLM. Il couvre aussi le parcours d'un
+visiteur sans clé, et celui d'une clé refusée.
 
 ---
 

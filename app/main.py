@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.config import ROOT, Settings, settings
 from app.demo import PARCOURS, charger_reponses_demo
 from app.embeddings import get_vectorstore
-from app.rag_chain import RagAnswer, answer
+from app.rag_chain import RagAnswer, answer, message_erreur_api
 
 GITHUB_URL = "https://github.com/HvalaG-tech/rag-assurance"
 EVAL_PATH = ROOT / "eval" / "results" / "latest.md"
@@ -335,9 +335,20 @@ def _repondre(question: str) -> tuple[RagAnswer, Settings] | None:
         st.warning("Plafond de questions atteint pour cette session.")
         return None
 
+    try:
+        with st.spinner("Recherche dans les contrats, puis rédaction…"):
+            reponse = answer(question, cfg)
+    except Exception as erreur:  # l'interface ne doit jamais planter sur le visiteur
+        # Une clé invalide, un crédit épuisé ou un service indisponible sont des
+        # situations normales côté visiteur : elles méritent une phrase, pas une
+        # trace Python. Le message brut n'est pas réaffiché : il peut citer la clé.
+        st.error(message_erreur_api(erreur))
+        return None
+
+    # Le compteur n'avance qu'en cas de succès : un échec ne doit pas consommer
+    # le quota de la session.
     st.session_state.questions_posees += 1
-    with st.spinner("Recherche dans les contrats, puis rédaction…"):
-        return answer(question, cfg), cfg
+    return reponse, cfg
 
 
 question = st.chat_input("Posez votre question sur les contrats indexés…")
